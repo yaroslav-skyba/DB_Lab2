@@ -80,7 +80,7 @@ public abstract class AbstractDao<T> implements Dao<T> {
         }
     }
 
-    private void modify(T entity, Supplier<String> sqlSupplier, BiConsumer<PreparedStatement, T> valuesBiConsumer) {
+    protected void modify(T entity, Supplier<String> sqlSupplier, BiConsumer<PreparedStatement, T> valuesBiConsumer) {
         try (Connection connection = ConnectionManager.getConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(sqlSupplier.get())) {
                 valuesBiConsumer.accept(preparedStatement, entity);
@@ -88,11 +88,6 @@ public abstract class AbstractDao<T> implements Dao<T> {
                 if (preparedStatement.executeUpdate() == 0) {
                     throw new IllegalStateException("Rows to modify were not found");
                 }
-
-                connection.commit();
-            } catch (SQLException exception) {
-                connection.rollback();
-                throw new IllegalStateException("Some errors occurred while executing statement", exception);
             }
         } catch (SQLException exception) {
             throw new IllegalStateException("Some errors occurred while connecting", exception);
