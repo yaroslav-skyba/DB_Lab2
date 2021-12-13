@@ -12,7 +12,6 @@ import com.github.yaroslavskybadev.dto.Subscription;
 import java.sql.Date;
 import java.util.InputMismatchException;
 import java.util.Scanner;
-import java.util.function.Consumer;
 
 public class View {
     private static final Scanner SCANNER = new Scanner(System.in);
@@ -53,7 +52,7 @@ public class View {
                 case "q":
                     System.exit(0);
                 default:
-                    System.out.println("An incorrect action. Try again.");
+                    System.out.println("ERROR. An incorrect action");
             }
         }
     }
@@ -73,57 +72,60 @@ public class View {
             switch (SCANNER.next()) {
                 case "a":
                     final Author author = new Author();
-                    setId(author::setId);
-                    setAuthor(author);
+                    author.setId(getId());
+                    setAuthorFields(author);
 
                     try {
                         AUTHOR_DAO.create(author);
                     } catch (IllegalStateException exception) {
-                        System.out.println("User with id=" + author.getId() + " already exists");
+                        System.out.println("ERROR. An author with id=" + author.getId() + " already exists");
                         continue;
                     }
 
                     break;
                 case "b":
                     final Book book = new Book();
+                    book.setId(getId());
+                    setBookFields(book);
 
-                    System.out.println();
-                    System.out.print("Id: ");
-
-                    book.setId(SCANNER.nextLong());
-                    setBook(book);
-
-                    BOOK_DAO.create(book);
+                    try {
+                        BOOK_DAO.create(book);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A book with id=" + book.getId() + " already exists");
+                        continue;
+                    }
 
                     break;
                 case "r":
                     final Reader reader = new Reader();
+                    reader.setId(getId());
+                    setReaderFields(reader);
 
-                    System.out.println();
-                    System.out.print("Id: ");
-
-                    reader.setId(SCANNER.nextLong());
-                    setReader(reader);
-
-                    READER_DAO.create(reader);
+                    try {
+                        READER_DAO.create(reader);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A reader with id=" + reader.getId() + " already exists");
+                        continue;
+                    }
 
                     break;
                 case "s":
                     final Subscription subscription = new Subscription();
+                    subscription.setId(getId());
+                    setSubscriptionFields(subscription);
 
-                    System.out.println();
-                    System.out.print("Id: ");
-
-                    subscription.setId(SCANNER.nextLong());
-                    setSubscription(subscription);
-
-                    SUBSCRIPTION_DAO.create(subscription);
+                    try {
+                        SUBSCRIPTION_DAO.create(subscription);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A subscription with id=" + subscription.getId() + " already exists");
+                        continue;
+                    }
 
                     break;
                 case "q":
                     System.exit(0);
                 default:
-                    System.out.println("Incorrect entity type. Try again.");
+                    System.out.println("ERROR. An incorrect entity type");
                     continue;
             }
 
@@ -147,33 +149,53 @@ public class View {
 
             switch (SCANNER.next()) {
                 case "a":
-                    System.out.println();
-                    System.out.print("Id: ");
-                    printAuthor(AUTHOR_DAO.findById(SCANNER.nextLong()));
+                    final long authorId = getId();
+
+                    try {
+                        printAuthor(AUTHOR_DAO.findById(authorId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. An author with id=" + authorId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "b":
-                    System.out.println();
-                    System.out.print("Id: ");
-                    printBook(BOOK_DAO.findById(SCANNER.nextLong()));
+                    final long bookId = getId();
+
+                    try {
+                        printBook(BOOK_DAO.findById(bookId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A book with id=" + bookId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "r":
-                    System.out.println();
-                    System.out.print("Id: ");
-                    printReader(READER_DAO.findById(SCANNER.nextLong()));
+                    final long readerId = getId();
+
+                    try {
+                        printReader(READER_DAO.findById(readerId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A reader with id=" + readerId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "s":
-                    System.out.println();
-                    System.out.print("Id: ");
-                    printSubscription(SUBSCRIPTION_DAO.findById(SCANNER.nextLong()));
+                    final long subscriptionId = getId();
+
+                    try {
+                        printSubscription(SUBSCRIPTION_DAO.findById(subscriptionId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A subscription with id=" + subscriptionId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "q":
                     System.exit(0);
                 default:
-                    System.out.println("Incorrect entity type. Try again.");
+                    System.out.println("ERROR. An incorrect entity type");
                     continue;
             }
 
@@ -229,7 +251,7 @@ public class View {
                 case "q":
                     System.exit(0);
                 default:
-                    System.out.println("Incorrect entity type. Try again.");
+                    System.out.println("ERROR. Incorrect entity type");
                     continue;
             }
 
@@ -251,46 +273,57 @@ public class View {
 
             switch (SCANNER.next()) {
                 case "a":
-                    System.out.println();
-                    System.out.print("Id: ");
+                    final Author author = AUTHOR_DAO.findById(getId());
+                    setAuthorFields(author);
 
-                    final Author author = AUTHOR_DAO.findById(SCANNER.nextLong());
-                    setAuthor(author);
-
-                    AUTHOR_DAO.update(author);
-
-                    break;
-                case "b":System.out.println();
-                    System.out.print("Id: ");
-
-                    final Book book = BOOK_DAO.findById(SCANNER.nextLong());
-                    setBook(book);
-
-                    BOOK_DAO.update(book);
+                    try {
+                        AUTHOR_DAO.update(author);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. An author with id=" + author.getId() + " does not exist");
+                        continue;
+                    }
 
                     break;
-                case "r":System.out.println();
-                    System.out.print("Id: ");
+                case "b":
+                    final Book book = BOOK_DAO.findById(getId());
+                    setBookFields(book);
 
-                    final Reader reader = READER_DAO.findById(SCANNER.nextLong());
-                    setReader(reader);
-
-                    READER_DAO.update(reader);
+                    try {
+                        BOOK_DAO.update(book);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A book with id=" + book.getId() + " does not exist");
+                        continue;
+                    }
 
                     break;
-                case "s":System.out.println();
-                    System.out.print("Id: ");
+                case "r":
+                    final Reader reader = READER_DAO.findById(getId());
+                    setReaderFields(reader);
 
-                    final Subscription subscription = SUBSCRIPTION_DAO.findById(SCANNER.nextLong());
-                    setSubscription(subscription);
+                    try {
+                        READER_DAO.update(reader);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A reader with id=" + reader.getId() + " does not exist");
+                        continue;
+                    }
 
-                    SUBSCRIPTION_DAO.update(subscription);
+                    break;
+                case "s":
+                    final Subscription subscription = SUBSCRIPTION_DAO.findById(getId());
+                    setSubscriptionFields(subscription);
+
+                    try {
+                        SUBSCRIPTION_DAO.update(subscription);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A subscription with id=" + subscription.getId() + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "q":
                     System.exit(0);
                 default:
-                    System.out.println("Incorrect entity type. Try again.");
+                    System.out.println("ERROR. An incorrect entity type");
                     continue;
             }
 
@@ -314,31 +347,47 @@ public class View {
 
             switch (SCANNER.next()) {
                 case "a":
-                    System.out.println();
-                    System.out.print("Id: ");
+                    final long authorId = getId();
 
-                    AUTHOR_DAO.remove(AUTHOR_DAO.findById(SCANNER.nextLong()));
+                    try {
+                        AUTHOR_DAO.remove(AUTHOR_DAO.findById(authorId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. An author with id=" + authorId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "b":
-                    System.out.println();
-                    System.out.print("Id: ");
+                    final long bookId = getId();
 
-                    BOOK_DAO.remove(BOOK_DAO.findById(SCANNER.nextLong()));
+                    try {
+                        BOOK_DAO.remove(BOOK_DAO.findById(bookId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A book with id=" + bookId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "r":
-                    System.out.println();
-                    System.out.print("Id: ");
+                    final long readerId = getId();
 
-                    READER_DAO.remove(READER_DAO.findById(SCANNER.nextLong()));
+                    try {
+                        READER_DAO.remove(READER_DAO.findById(readerId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A reader with id=" + readerId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "s":
-                    System.out.println();
-                    System.out.print("Id: ");
+                    final long subscriptionId = getId();
 
-                    SUBSCRIPTION_DAO.remove(SUBSCRIPTION_DAO.findById(SCANNER.nextLong()));
+                    try {
+                        SUBSCRIPTION_DAO.remove(SUBSCRIPTION_DAO.findById(subscriptionId));
+                    } catch (IllegalStateException exception) {
+                        System.out.println("ERROR. A subscription with id=" + subscriptionId + " does not exist");
+                        continue;
+                    }
 
                     break;
                 case "q":
@@ -376,34 +425,7 @@ public class View {
         System.out.println("Expiration date: " + subscription.getExpirationDate());
     }
 
-    private void setSubscription(Subscription subscription) {
-        System.out.print("Reader id: ");
-        subscription.setReaderId(SCANNER.nextLong());
-
-        System.out.print("Registration date (yyyy-[m]m-[d]d): ");
-        subscription.setRegistrationDate(Date.valueOf(SCANNER.next()));
-
-        System.out.print("Expiration date (yyyy-[m]m-[d]d): ");
-        subscription.setExpirationDate(Date.valueOf(SCANNER.next()));
-    }
-
-    private void setReader(Reader reader) {
-        System.out.print("First name: ");
-        reader.setFirstName(SCANNER.next());
-
-        System.out.print("Second name: ");
-        reader.setSecondName(SCANNER.next());
-    }
-
-    private void setBook(Book book) {
-        System.out.print("Name: ");
-        book.setName(SCANNER.next());
-
-        System.out.print("Page count: ");
-        book.setPageCount(SCANNER.nextInt());
-    }
-
-    private void setAuthor(Author author) {
+    private void setAuthorFields(Author author) {
         System.out.print("First name: ");
         author.setFirstName(SCANNER.next());
 
@@ -411,17 +433,90 @@ public class View {
         author.setSecondName(SCANNER.next());
     }
 
-    private void setId(Consumer<Long> idSetter) {
-        while (true) {
-            try {
-                System.out.println();
-                System.out.print("Id: ");
-                idSetter.accept(SCANNER.nextLong());
+    private void setBookFields(Book book) {
+        System.out.print("Name: ");
+        book.setName(SCANNER.next());
 
-                break;
+        while (true) {
+            System.out.print("Page count: ");
+
+            final int pageCount;
+            final String errorMessage = "This field should be a positive int";
+
+            try {
+                pageCount = SCANNER.nextInt();
             } catch (InputMismatchException exception) {
-                System.out.println("This field should be an int");
+                System.out.println(errorMessage);
                 SCANNER.next();
+                System.out.println();
+
+                continue;
+            }
+
+            if (pageCount > 0) {
+                book.setPageCount(pageCount);
+                break;
+            } else {
+                System.out.println(errorMessage + "\n");
+            }
+        }
+    }
+
+    private void setReaderFields(Reader reader) {
+        System.out.print("First name: ");
+        reader.setFirstName(SCANNER.next());
+
+        System.out.print("Second name: ");
+        reader.setSecondName(SCANNER.next());
+    }
+
+    private void setSubscriptionFields(Subscription subscription) {
+        subscription.setReaderId(getId("Reader "));
+
+        while (true) {
+            System.out.print("Registration date (yyyy-[m]m-[d]d): ");
+
+            try {
+                subscription.setRegistrationDate(Date.valueOf(SCANNER.next()));
+                break;
+            } catch (IllegalArgumentException exception) {
+                System.out.println("This field should be a date\n");
+            }
+        }
+
+        while (true) {
+            System.out.print("Expiration date (yyyy-[m]m-[d]d): ");
+
+            try {
+                subscription.setExpirationDate(Date.valueOf(SCANNER.next()));
+                break;
+            } catch (IllegalArgumentException exception) {
+                System.out.println("This field should be a date\n");
+            }
+        }
+    }
+
+    private long getId(String... optionalStrings) {
+        while (true) {
+            System.out.print(String.join(" ", optionalStrings) + "Id: ");
+
+            final long id;
+            final String errorMessage = "This field should be a positive int";
+
+            try {
+                id = SCANNER.nextLong();
+            } catch (InputMismatchException exception) {
+                System.out.println(errorMessage);
+                SCANNER.next();
+                System.out.println();
+
+                continue;
+            }
+
+            if (id > 0) {
+                return id;
+            } else {
+                System.out.println(errorMessage + "\n");
             }
         }
     }
