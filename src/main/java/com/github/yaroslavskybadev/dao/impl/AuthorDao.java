@@ -1,8 +1,11 @@
 package com.github.yaroslavskybadev.dao.impl;
 
+import com.github.yaroslavskybadev.ConnectionManager;
 import com.github.yaroslavskybadev.dao.AbstractDao;
 import com.github.yaroslavskybadev.dto.Author;
+import com.github.yaroslavskybadev.dto.Book;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -72,6 +75,22 @@ public class AuthorDao extends AbstractDao<Author> {
             preparedStatement.setLong(1, e.getId());
         } catch (SQLException ex) {
             throw new IllegalStateException(ex);
+        }
+    }
+
+    public void addBooks(Author author) {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement("insert into book_author (book_id, author_id) values (?, ?)")) {
+            for (Book book : author.getBookList()) {
+                statement.setLong(1, book.getId());
+                statement.setLong(2, author.getId());
+
+                statement.addBatch();
+            }
+
+            statement.executeBatch();
+        } catch (SQLException exception) {
+            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
         }
     }
 

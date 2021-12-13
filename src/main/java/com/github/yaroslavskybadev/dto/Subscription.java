@@ -1,12 +1,16 @@
 package com.github.yaroslavskybadev.dto;
 
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Subscription {
     private Long id;
     private Long readerId;
     private Date registrationDate;
     private Date expirationDate;
+
+    private final List<Book> bookList = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -38,5 +42,17 @@ public class Subscription {
 
     public void setExpirationDate(Date expirationDate) {
         this.expirationDate = expirationDate;
+    }
+
+    public List<Book> getBookList() {
+        return bookList;
+    }
+
+    public void addBook(Book book) {
+        bookList.add(book);
+    }
+
+    public void removeBook(Book book) {
+        bookList.remove(book);
     }
 }

@@ -56,7 +56,7 @@ public abstract class AbstractDao<T> implements Dao<T> {
                 entityList.add(getEntity(resultSet));
             }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Some errors occurred while connecting", exception);
+            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
         }
 
         return entityList;
@@ -76,7 +76,7 @@ public abstract class AbstractDao<T> implements Dao<T> {
                 return getEntity(resultSet);
             }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Some errors occurred while connecting", exception);
+            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
         }
     }
 
@@ -90,7 +90,7 @@ public abstract class AbstractDao<T> implements Dao<T> {
                 }
             }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Some errors occurred while connecting", exception);
+            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
         }
     }
 }
