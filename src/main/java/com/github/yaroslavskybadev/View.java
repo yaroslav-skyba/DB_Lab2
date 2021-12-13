@@ -10,7 +10,9 @@ import com.github.yaroslavskybadev.dto.Reader;
 import com.github.yaroslavskybadev.dto.Subscription;
 
 import java.sql.Date;
+import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 public class View {
     private static final Scanner SCANNER = new Scanner(System.in);
@@ -71,14 +73,15 @@ public class View {
             switch (SCANNER.next()) {
                 case "a":
                     final Author author = new Author();
-
-                    System.out.println();
-                    System.out.print("Id: ");
-
-                    author.setId(SCANNER.nextLong());
+                    setId(author::setId);
                     setAuthor(author);
 
-                    AUTHOR_DAO.create(author);
+                    try {
+                        AUTHOR_DAO.create(author);
+                    } catch (IllegalStateException exception) {
+                        System.out.println("User with id=" + author.getId() + " already exists");
+                        continue;
+                    }
 
                     break;
                 case "b":
@@ -378,10 +381,10 @@ public class View {
         subscription.setReaderId(SCANNER.nextLong());
 
         System.out.print("Registration date (yyyy-[m]m-[d]d): ");
-        subscription.setRegistrationDate(Date.valueOf(SCANNER.nextLine()));
+        subscription.setRegistrationDate(Date.valueOf(SCANNER.next()));
 
         System.out.print("Expiration date (yyyy-[m]m-[d]d): ");
-        subscription.setExpirationDate(Date.valueOf(SCANNER.nextLine()));
+        subscription.setExpirationDate(Date.valueOf(SCANNER.next()));
     }
 
     private void setReader(Reader reader) {
@@ -406,5 +409,20 @@ public class View {
 
         System.out.print("Second name: ");
         author.setSecondName(SCANNER.next());
+    }
+
+    private void setId(Consumer<Long> idSetter) {
+        while (true) {
+            try {
+                System.out.println();
+                System.out.print("Id: ");
+                idSetter.accept(SCANNER.nextLong());
+
+                break;
+            } catch (InputMismatchException exception) {
+                System.out.println("This field should be an int");
+                SCANNER.next();
+            }
+        }
     }
 }
