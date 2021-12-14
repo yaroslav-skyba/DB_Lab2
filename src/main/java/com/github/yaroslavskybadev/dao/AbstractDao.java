@@ -46,12 +46,6 @@ public abstract class AbstractDao<T> implements Dao<T> {
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(getSqlForFindAll());
              ResultSet resultSet = preparedStatement.executeQuery()) {
-            if (!resultSet.next()) {
-                throw new IllegalStateException("No rows were found");
-            }
-
-            entityList.add(getEntity(resultSet));
-
             while (resultSet.next()) {
                 entityList.add(getEntity(resultSet));
             }

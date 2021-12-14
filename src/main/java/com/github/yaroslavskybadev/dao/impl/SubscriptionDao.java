@@ -1,11 +1,16 @@
 package com.github.yaroslavskybadev.dao.impl;
 
+import com.github.yaroslavskybadev.ConnectionManager;
 import com.github.yaroslavskybadev.dao.AbstractDao;
 import com.github.yaroslavskybadev.dto.Subscription;
 
+import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SubscriptionDao extends AbstractDao<Subscription> {
     @Override
@@ -74,6 +79,25 @@ public class SubscriptionDao extends AbstractDao<Subscription> {
         } catch (SQLException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    public List<Subscription> findSubscriptionsByFirstName(Date registrationDate) {
+        final List<Subscription> subscriptionList = new ArrayList<>();
+
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("select * from subscription where registration_date = ?")) {
+            preparedStatement.setDate(1, registrationDate);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    subscriptionList.add(getEntity(resultSet));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
+        }
+
+        return subscriptionList;
     }
 
     private void setSpecificValuesForCreate(PreparedStatement preparedStatement, Subscription e) throws SQLException {

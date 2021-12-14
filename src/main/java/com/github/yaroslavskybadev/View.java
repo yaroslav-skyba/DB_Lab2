@@ -20,6 +20,8 @@ public class View {
     private static final ReaderDao READER_DAO = new ReaderDao();
     private static final SubscriptionDao SUBSCRIPTION_DAO = new SubscriptionDao();
 
+    private static final String BOOK_NAMES_SEPARATOR = ";";
+
     public void runMenu() {
         while (true) {
             System.out.println();
@@ -82,16 +84,11 @@ public class View {
                         continue;
                     }
 
+                    AUTHOR_DAO.addBooks(author);
+
                     break;
                 case "b":
-                    final Book book = new Book();
-                    book.setId(getId());
-                    setBookFields(book);
-
-                    try {
-                        BOOK_DAO.create(book);
-                    } catch (IllegalStateException exception) {
-                        System.out.println("ERROR. A book with id=" + book.getId() + " already exists");
+                    if (createBook() == null) {
                         continue;
                     }
 
@@ -283,6 +280,8 @@ public class View {
                         continue;
                     }
 
+                    AUTHOR_DAO.addBooks(author);
+
                     break;
                 case "b":
                     final Book book = BOOK_DAO.findById(getId());
@@ -404,6 +403,8 @@ public class View {
     private void printAuthor(Author author) {
         System.out.println("First name: " + author.getFirstName());
         System.out.println("Second name: " + author.getSecondName());
+        System.out.println("Books: ");
+        author.getBookList().forEach(this::printBook);
     }
 
     private void printBook(Book book) {
@@ -431,6 +432,19 @@ public class View {
 
         System.out.print("Second name: ");
         author.setSecondName(SCANNER.next());
+
+        do {
+            System.out.println("\nAdd a book\n");
+
+            final Book book = createBook();
+
+            if (book != null) {
+                author.addBook(book);
+            }
+
+            System.out.println("\nPress s - to stop adding books");
+            System.out.print("Continue: ");
+        } while (!"s".equals(SCANNER.next()));
     }
 
     private void setBookFields(Book book) {
@@ -519,5 +533,20 @@ public class View {
                 System.out.println(errorMessage + "\n");
             }
         }
+    }
+
+    private Book createBook() {
+        final Book book = new Book();
+        book.setId(getId());
+        setBookFields(book);
+
+        try {
+            BOOK_DAO.create(book);
+        } catch (IllegalStateException exception) {
+            System.out.println("ERROR. A book with id=" + book.getId() + " already exists");
+            return null;
+        }
+
+        return book;
     }
 }

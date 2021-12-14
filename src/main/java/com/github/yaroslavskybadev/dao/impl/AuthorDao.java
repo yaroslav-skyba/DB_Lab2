@@ -9,14 +9,29 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AuthorDao extends AbstractDao<Author> {
+    private static final BookDao BOOK_DAO = new BookDao();
+
     @Override
     protected Author getEntity(ResultSet resultSet) throws SQLException {
         final Author author = new Author();
         author.setId(resultSet.getLong("id"));
         author.setFirstName(resultSet.getString("first_name"));
         author.setSecondName(resultSet.getString("second_name"));
+
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("select book_id from book_author where author_id = ?")) {
+            preparedStatement.setLong(1, author.getId());
+
+            try (ResultSet bookResultSet = preparedStatement.executeQuery()) {
+                while (bookResultSet.next()) {
+                    author.addBook(BOOK_DAO.findById(bookResultSet.getLong("book_id")));
+                }
+            }
+        }
 
         return author;
     }
@@ -76,6 +91,25 @@ public class AuthorDao extends AbstractDao<Author> {
         } catch (SQLException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    public List<Author> findAuthorsByFirstName(String firstName) {
+        final List<Author> authorList = new ArrayList<>();
+
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("select * from author where first_name = ?")) {
+            preparedStatement.setString(1, firstName);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    authorList.add(getEntity(resultSet));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
+        }
+
+        return authorList;
     }
 
     public void addBooks(Author author) {
