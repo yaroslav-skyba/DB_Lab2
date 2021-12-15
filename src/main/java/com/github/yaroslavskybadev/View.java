@@ -74,7 +74,9 @@ public class View {
 
             switch (SCANNER.next()) {
                 case "a":
-                    final Author author = createAuthor();
+                    final Author author = new Author();
+                    author.setId(getId());
+                    setAuthorFields(author);
 
                     try {
                         AUTHOR_DAO.create(author);
@@ -90,7 +92,6 @@ public class View {
 
                     try {
                         BOOK_DAO.create(book);
-                        modifyBook(book);
                     } catch (IllegalArgumentException exception) {
                         System.out.println("ERROR. A book with id=" + book.getId() + " already exists");
                         continue;
@@ -111,7 +112,9 @@ public class View {
 
                     break;
                 case "s":
-                    final Subscription subscription = createSubscription();
+                    final Subscription subscription = new Subscription();
+                    subscription.setId(getId());
+                    setSubscriptionFields(subscription);
 
                     try {
                         SUBSCRIPTION_DAO.create(subscription);
@@ -298,7 +301,8 @@ public class View {
                         setBookFields(book);
 
                         BOOK_DAO.update(book);
-                        modifyBook(book);
+                        BOOK_DAO.addAuthors(book);
+                        BOOK_DAO.addSubscriptions(book);
                     } catch (IllegalStateException exception) {
                         System.out.println("ERROR. A book with id=" + bookId + " does not exist");
                         continue;
@@ -432,12 +436,6 @@ public class View {
     private void printBook(Book book) {
         System.out.println("Name: " + book.getName());
         System.out.println("Page count: " + book.getPageCount());
-
-        System.out.println("Authors: ");
-        book.getAuthorList().forEach(this::printAuthor);
-
-        System.out.println("Subscriptions: ");
-        book.getSubscriptionList().forEach(this::printSubscription);
     }
 
     private void printReader(Reader reader) {
@@ -506,38 +504,6 @@ public class View {
                 System.out.println(errorMessage + "\n");
             }
         }
-
-        do {
-            System.out.println("\nAdd an author\n");
-
-            final Author author = createAuthor();
-
-            try {
-                AUTHOR_DAO.create(author);
-            } catch (IllegalArgumentException ignored) {
-            }
-
-            book.addAuthor(author);
-
-            System.out.println("\nPress " + KEY_TO_STOP_ADDING_ENTITIES + " - to stop adding authors");
-            System.out.print("Continue: ");
-        } while (!KEY_TO_STOP_ADDING_ENTITIES.equals(SCANNER.next()));
-
-        do {
-            System.out.println("\nAdd a subscription\n");
-
-            final Subscription subscription = createSubscription();
-
-            try {
-                SUBSCRIPTION_DAO.create(subscription);
-            } catch (IllegalArgumentException ignored) {
-            }
-
-            book.addSubscription(subscription);
-
-            System.out.println("\nPress " + KEY_TO_STOP_ADDING_ENTITIES + " - to stop adding subscriptions");
-            System.out.print("Continue: ");
-        } while (!KEY_TO_STOP_ADDING_ENTITIES.equals(SCANNER.next()));
     }
 
     private void setReaderFields(Reader reader) {
@@ -615,32 +581,11 @@ public class View {
         }
     }
 
-    private Author createAuthor() {
-        final Author author = new Author();
-        author.setId(getId());
-        setAuthorFields(author);
-
-        return author;
-    }
-
     private Book createBook() {
         final Book book = new Book();
         book.setId(getId());
         setBookFields(book);
 
         return book;
-    }
-
-    private Subscription createSubscription() {
-        final Subscription subscription = new Subscription();
-        subscription.setId(getId());
-        setSubscriptionFields(subscription);
-
-        return subscription;
-    }
-
-    private void modifyBook(Book book) {
-        BOOK_DAO.addAuthors(book);
-        BOOK_DAO.addSubscriptions(book);
     }
 }

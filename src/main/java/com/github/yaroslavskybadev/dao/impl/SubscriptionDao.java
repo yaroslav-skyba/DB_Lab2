@@ -81,7 +81,7 @@ public class SubscriptionDao extends AbstractDao<Subscription> {
 
     public void addBooks(Subscription subscription) {
         try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement("insert into book_author values (?, ?)")) {
+             PreparedStatement preparedStatement = connection.prepareStatement("insert into book_subscription values (?, ?)")) {
 
             for (Book book : subscription.getBookList()) {
                 preparedStatement.setLong(1, book.getId());
