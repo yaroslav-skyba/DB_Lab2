@@ -9,8 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AuthorDao extends AbstractDao<Author> {
     private static final BookDao BOOK_DAO = new BookDao();
@@ -93,36 +91,17 @@ public class AuthorDao extends AbstractDao<Author> {
         }
     }
 
-    public List<Author> findAuthorsByFirstName(String firstName) {
-        final List<Author> authorList = new ArrayList<>();
-
-        try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement("select * from author where first_name = ?")) {
-            preparedStatement.setString(1, firstName);
-
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    authorList.add(getEntity(resultSet));
-                }
-            }
-        } catch (SQLException exception) {
-            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
-        }
-
-        return authorList;
-    }
-
     public void addBooks(Author author) {
         try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement("insert into book_author (book_id, author_id) values (?, ?)")) {
+             PreparedStatement preparedStatement = connection.prepareStatement("insert into book_author values (?, ?)")) {
             for (Book book : author.getBookList()) {
-                statement.setLong(1, book.getId());
-                statement.setLong(2, author.getId());
+                preparedStatement.setLong(1, book.getId());
+                preparedStatement.setLong(2, author.getId());
 
-                statement.addBatch();
+                preparedStatement.addBatch();
             }
 
-            statement.executeBatch();
+            preparedStatement.executeBatch();
         } catch (SQLException exception) {
             throw new IllegalArgumentException("Some errors occurred while connecting", exception);
         }

@@ -2,14 +2,15 @@ package com.github.yaroslavskybadev.dao.impl;
 
 import com.github.yaroslavskybadev.ConnectionManager;
 import com.github.yaroslavskybadev.dao.AbstractDao;
+import com.github.yaroslavskybadev.dto.Author;
 import com.github.yaroslavskybadev.dto.Book;
+import com.github.yaroslavskybadev.dto.Subscription;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.LongSupplier;
 
 public class BookDao extends AbstractDao<Book> {
     @Override
@@ -79,27 +80,43 @@ public class BookDao extends AbstractDao<Book> {
         }
     }
 
-    public List<Book> findBooksByName(String name) {
-        final List<Book> bookList = new ArrayList<>();
-
+    public void addAuthors(Book book) {
         try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement("select * from book where name = ?")) {
-            preparedStatement.setString(1, name);
+             PreparedStatement preparedStatement = connection.prepareStatement("insert into book_author values (?, ?)")) {
 
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    bookList.add(getEntity(resultSet));
-                }
+            for (Author author : book.getAuthorList()) {
+                addBatch(preparedStatement, book, author::getId);
             }
+
+            preparedStatement.executeBatch();
         } catch (SQLException exception) {
             throw new IllegalArgumentException("Some errors occurred while connecting", exception);
         }
-
-        return bookList;
     }
 
-    private void setSpecificValuesForCreate(PreparedStatement preparedStatement, Book e) throws SQLException {
-        preparedStatement.setString(2, e.getName());
-        preparedStatement.setInt(3, e.getPageCount());
+    public void addSubscriptions(Book book) {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("insert into book_subscription values (?, ?)")) {
+
+            for (Subscription subscription : book.getSubscriptionList()) {
+                addBatch(preparedStatement, book, subscription::getId);
+            }
+
+            preparedStatement.executeBatch();
+        } catch (SQLException exception) {
+            throw new IllegalArgumentException("Some errors occurred while connecting", exception);
+        }
+    }
+
+    private void addBatch(PreparedStatement preparedStatement, Book book, LongSupplier idSupplier) throws SQLException {
+        preparedStatement.setLong(1, book.getId());
+        preparedStatement.setLong(2, idSupplier.getAsLong());
+
+        preparedStatement.addBatch();
+    }
+
+    private void setSpecificValuesForCreate(PreparedStatement preparedStatement, Book book) throws SQLException {
+        preparedStatement.setString(2, book.getName());
+        preparedStatement.setInt(3, book.getPageCount());
     }
 }

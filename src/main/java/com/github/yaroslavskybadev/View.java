@@ -21,6 +21,7 @@ public class View {
     private static final SubscriptionDao SUBSCRIPTION_DAO = new SubscriptionDao();
 
     private static final String BOOK_NAMES_SEPARATOR = ";";
+    private static final String KEY_TO_STOP_ADDING_ENTITIES = "s";
 
     public void runMenu() {
         while (true) {
@@ -73,22 +74,25 @@ public class View {
 
             switch (SCANNER.next()) {
                 case "a":
-                    final Author author = new Author();
-                    author.setId(getId());
-                    setAuthorFields(author);
+                    final Author author = createAuthor();
 
                     try {
                         AUTHOR_DAO.create(author);
-                    } catch (IllegalStateException exception) {
+                        AUTHOR_DAO.addBooks(author);
+                    } catch (IllegalArgumentException exception) {
                         System.out.println("ERROR. An author with id=" + author.getId() + " already exists");
                         continue;
                     }
 
-                    AUTHOR_DAO.addBooks(author);
-
                     break;
                 case "b":
-                    if (createBook() == null) {
+                    final Book book = createBook();
+
+                    try {
+                        BOOK_DAO.create(book);
+                        modifyBook(book);
+                    } catch (IllegalArgumentException exception) {
+                        System.out.println("ERROR. A book with id=" + book.getId() + " already exists");
                         continue;
                     }
 
@@ -100,20 +104,19 @@ public class View {
 
                     try {
                         READER_DAO.create(reader);
-                    } catch (IllegalStateException exception) {
+                    } catch (IllegalArgumentException exception) {
                         System.out.println("ERROR. A reader with id=" + reader.getId() + " already exists");
                         continue;
                     }
 
                     break;
                 case "s":
-                    final Subscription subscription = new Subscription();
-                    subscription.setId(getId());
-                    setSubscriptionFields(subscription);
+                    final Subscription subscription = createSubscription();
 
                     try {
                         SUBSCRIPTION_DAO.create(subscription);
-                    } catch (IllegalStateException exception) {
+                        SUBSCRIPTION_DAO.addBooks(subscription);
+                    } catch (IllegalArgumentException exception) {
                         System.out.println("ERROR. A subscription with id=" + subscription.getId() + " already exists");
                         continue;
                     }
@@ -270,51 +273,70 @@ public class View {
 
             switch (SCANNER.next()) {
                 case "a":
-                    final Author author = AUTHOR_DAO.findById(getId());
-                    setAuthorFields(author);
+                    final long authorId = getId();
 
                     try {
+                        final Author author = AUTHOR_DAO.findById(authorId);
+                        setAuthorFields(author);
+
                         AUTHOR_DAO.update(author);
+                        AUTHOR_DAO.addBooks(author);
                     } catch (IllegalStateException exception) {
-                        System.out.println("ERROR. An author with id=" + author.getId() + " does not exist");
+                        System.out.println("ERROR. An author with id=" + authorId + " does not exist");
+                        continue;
+                    } catch (IllegalArgumentException exception) {
+                        System.out.println("ERROR. An author already owns one of these books");
                         continue;
                     }
 
-                    AUTHOR_DAO.addBooks(author);
-
                     break;
                 case "b":
-                    final Book book = BOOK_DAO.findById(getId());
-                    setBookFields(book);
+                    final long bookId = getId();
 
                     try {
+                        final Book book = BOOK_DAO.findById(bookId);
+                        setBookFields(book);
+
                         BOOK_DAO.update(book);
+                        modifyBook(book);
                     } catch (IllegalStateException exception) {
-                        System.out.println("ERROR. A book with id=" + book.getId() + " does not exist");
+                        System.out.println("ERROR. A book with id=" + bookId + " does not exist");
+                        continue;
+                    } catch (IllegalArgumentException exception) {
+                        System.out.println("ERROR. A book is already owned by one of these authors");
                         continue;
                     }
 
                     break;
                 case "r":
-                    final Reader reader = READER_DAO.findById(getId());
-                    setReaderFields(reader);
+                    final long readerId = getId();
+                    final Reader reader;
 
                     try {
-                        READER_DAO.update(reader);
+                        reader = READER_DAO.findById(readerId);
                     } catch (IllegalStateException exception) {
-                        System.out.println("ERROR. A reader with id=" + reader.getId() + " does not exist");
+                        System.out.println("ERROR. A reader with id=" + readerId + " does not exist");
                         continue;
                     }
 
+                    setReaderFields(reader);
+                    READER_DAO.update(reader);
+
                     break;
                 case "s":
-                    final Subscription subscription = SUBSCRIPTION_DAO.findById(getId());
-                    setSubscriptionFields(subscription);
+                    final long subscriptionId = getId();
 
                     try {
+                        final Subscription subscription = SUBSCRIPTION_DAO.findById(subscriptionId);
+                        setSubscriptionFields(subscription);
+
                         SUBSCRIPTION_DAO.update(subscription);
+                        SUBSCRIPTION_DAO.addBooks(subscription);
                     } catch (IllegalStateException exception) {
-                        System.out.println("ERROR. A subscription with id=" + subscription.getId() + " does not exist");
+                        System.out.println("ERROR. A subscription with id=" + subscriptionId + " does not exist");
+                        continue;
+                    } catch (IllegalArgumentException exception) {
+                        System.out.println("ERROR. A subscription is already signed for one of these books");
                         continue;
                     }
 
@@ -410,6 +432,12 @@ public class View {
     private void printBook(Book book) {
         System.out.println("Name: " + book.getName());
         System.out.println("Page count: " + book.getPageCount());
+
+        System.out.println("Authors: ");
+        book.getAuthorList().forEach(this::printAuthor);
+
+        System.out.println("Subscriptions: ");
+        book.getSubscriptionList().forEach(this::printSubscription);
     }
 
     private void printReader(Reader reader) {
@@ -421,9 +449,10 @@ public class View {
         final Reader subscriptionReader = READER_DAO.findById(subscription.getReaderId());
         System.out.println("Reader first name: " + subscriptionReader.getFirstName());
         System.out.println("Reader second name: " + subscriptionReader.getSecondName());
-
         System.out.println("Registration date: " + subscription.getRegistrationDate());
         System.out.println("Expiration date: " + subscription.getExpirationDate());
+        System.out.println("Books: ");
+        subscription.getBookList().forEach(this::printBook);
     }
 
     private void setAuthorFields(Author author) {
@@ -438,13 +467,16 @@ public class View {
 
             final Book book = createBook();
 
-            if (book != null) {
-                author.addBook(book);
+            try {
+                BOOK_DAO.create(book);
+            } catch (IllegalArgumentException ignored) {
             }
 
-            System.out.println("\nPress s - to stop adding books");
+            author.addBook(book);
+
+            System.out.println("\nPress " + KEY_TO_STOP_ADDING_ENTITIES + " - to stop adding books");
             System.out.print("Continue: ");
-        } while (!"s".equals(SCANNER.next()));
+        } while (!KEY_TO_STOP_ADDING_ENTITIES.equals(SCANNER.next()));
     }
 
     private void setBookFields(Book book) {
@@ -474,6 +506,38 @@ public class View {
                 System.out.println(errorMessage + "\n");
             }
         }
+
+        do {
+            System.out.println("\nAdd an author\n");
+
+            final Author author = createAuthor();
+
+            try {
+                AUTHOR_DAO.create(author);
+            } catch (IllegalArgumentException ignored) {
+            }
+
+            book.addAuthor(author);
+
+            System.out.println("\nPress " + KEY_TO_STOP_ADDING_ENTITIES + " - to stop adding authors");
+            System.out.print("Continue: ");
+        } while (!KEY_TO_STOP_ADDING_ENTITIES.equals(SCANNER.next()));
+
+        do {
+            System.out.println("\nAdd a subscription\n");
+
+            final Subscription subscription = createSubscription();
+
+            try {
+                SUBSCRIPTION_DAO.create(subscription);
+            } catch (IllegalArgumentException ignored) {
+            }
+
+            book.addSubscription(subscription);
+
+            System.out.println("\nPress " + KEY_TO_STOP_ADDING_ENTITIES + " - to stop adding subscriptions");
+            System.out.print("Continue: ");
+        } while (!KEY_TO_STOP_ADDING_ENTITIES.equals(SCANNER.next()));
     }
 
     private void setReaderFields(Reader reader) {
@@ -508,6 +572,22 @@ public class View {
                 System.out.println("This field should be a date\n");
             }
         }
+
+        do {
+            System.out.println("\nAdd a book\n");
+
+            final Book book = createBook();
+
+            try {
+                BOOK_DAO.create(book);
+            } catch (IllegalArgumentException ignored) {
+            }
+
+            subscription.addBook(book);
+
+            System.out.println("\nPress " + KEY_TO_STOP_ADDING_ENTITIES + " - to stop adding books");
+            System.out.print("Continue: ");
+        } while (!KEY_TO_STOP_ADDING_ENTITIES.equals(SCANNER.next()));
     }
 
     private long getId(String... optionalStrings) {
@@ -535,18 +615,32 @@ public class View {
         }
     }
 
+    private Author createAuthor() {
+        final Author author = new Author();
+        author.setId(getId());
+        setAuthorFields(author);
+
+        return author;
+    }
+
     private Book createBook() {
         final Book book = new Book();
         book.setId(getId());
         setBookFields(book);
 
-        try {
-            BOOK_DAO.create(book);
-        } catch (IllegalStateException exception) {
-            System.out.println("ERROR. A book with id=" + book.getId() + " already exists");
-            return null;
-        }
-
         return book;
+    }
+
+    private Subscription createSubscription() {
+        final Subscription subscription = new Subscription();
+        subscription.setId(getId());
+        setSubscriptionFields(subscription);
+
+        return subscription;
+    }
+
+    private void modifyBook(Book book) {
+        BOOK_DAO.addAuthors(book);
+        BOOK_DAO.addSubscriptions(book);
     }
 }
