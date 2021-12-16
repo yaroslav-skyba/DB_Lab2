@@ -36,6 +36,7 @@ public class View {
             System.out.println("Press d - to delete an entity");
             System.out.println("Press g - to generate entities");
             System.out.println("Press s2 - to search with 2 tables");
+            System.out.println("Press s3 - to search with 3 tables");
             System.out.println("Press q - to quit the program");
             System.out.println();
 
@@ -62,6 +63,9 @@ public class View {
                     break;
                 case "s2":
                     searchWithReaderAndSubscriptionEntities();
+                    break;
+                case "s3":
+                    searchWithBookAndReaderAndSubscriptionEntities();
                     break;
                 case "q":
                     System.exit(0);
@@ -492,6 +496,29 @@ public class View {
         final Date registrationDate = Date.valueOf(SCANNER.next());
 
         for (List<Map<String, Object>> recordList : Dao.searchWithReaderAndSubscriptionEntities(firstName, secondName, registrationDate)) {
+            System.out.println("Reader id: " + recordList.get(0).get("reader_id"));
+            System.out.println("Reader first name: " + recordList.get(1).get("first_name"));
+            System.out.println("Reader second name: " + recordList.get(2).get("second_name"));
+            System.out.println("Subscription id: " + recordList.get(3).get("id"));
+            System.out.println("Subscription registration date: " + recordList.get(4).get("registration_date"));
+            System.out.println("Subscription expiration date: " + recordList.get(5).get("expiration_date"));
+            System.out.println();
+        }
+    }
+
+    private void searchWithBookAndReaderAndSubscriptionEntities() {
+        System.out.print("\nBook name: ");
+        final String bookName = SCANNER.next();
+
+        System.out.print("Reader second name: ");
+        final String secondName = SCANNER.next();
+
+        System.out.print("Subscription registration date: ");
+        final Date registrationDate = Date.valueOf(SCANNER.next());
+
+        for (List<Map<String, Object>> recordList : Dao.searchWithReaderAndSubscriptionEntities(bookName, secondName, registrationDate)) {
+            System.out.println("Book name: " + recordList.get(0).get("name"));
+            System.out.println("Page count: " + recordList.get(0).get("page_count"));
             System.out.println("Reader id: " + recordList.get(0).get("reader_id"));
             System.out.println("Reader first name: " + recordList.get(1).get("first_name"));
             System.out.println("Reader second name: " + recordList.get(2).get("second_name"));
