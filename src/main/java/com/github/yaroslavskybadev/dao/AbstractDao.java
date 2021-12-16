@@ -24,6 +24,8 @@ public abstract class AbstractDao<T> implements Dao<T> {
     protected abstract void setValuesForUpdate(PreparedStatement preparedStatement, T e);
     protected abstract void setValuesForRemove(PreparedStatement preparedStatement, T e);
 
+    protected abstract T createRandomizedEntity();
+
     @Override
     public void create(T entity) {
         modify(entity, this::getSqlForCreate, this::setValuesForCreate);
@@ -72,6 +74,13 @@ public abstract class AbstractDao<T> implements Dao<T> {
         } catch (SQLException exception) {
             throw new IllegalArgumentException("Some errors occurred while connecting", exception);
         }
+    }
+
+    @Override
+    public void generateEntities() {
+       for (int i = 0; i < 10000; i++) {
+           create(createRandomizedEntity());
+       }
     }
 
     protected void modify(T entity, Supplier<String> sqlSupplier, BiConsumer<PreparedStatement, T> valuesBiConsumer) {

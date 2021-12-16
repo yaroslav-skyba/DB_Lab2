@@ -1,5 +1,6 @@
 package com.github.yaroslavskybadev;
 
+import com.github.yaroslavskybadev.dao.Dao;
 import com.github.yaroslavskybadev.dao.impl.AuthorDao;
 import com.github.yaroslavskybadev.dao.impl.BookDao;
 import com.github.yaroslavskybadev.dao.impl.ReaderDao;
@@ -11,6 +12,8 @@ import com.github.yaroslavskybadev.dto.Subscription;
 
 import java.sql.Date;
 import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class View {
@@ -31,6 +34,8 @@ public class View {
             System.out.println("Press ra - to read all entities");
             System.out.println("Press u - to update an entity");
             System.out.println("Press d - to delete an entity");
+            System.out.println("Press g - to generate entities");
+            System.out.println("Press s2 - to search with 2 tables");
             System.out.println("Press q - to quit the program");
             System.out.println();
 
@@ -51,6 +56,12 @@ public class View {
                     break;
                 case "d":
                     deleteEntity();
+                    break;
+                case "g":
+                    generateEntities();
+                    break;
+                case "s2":
+                    searchWithReaderAndSubscriptionEntities();
                     break;
                 case "q":
                     System.exit(0);
@@ -423,6 +434,71 @@ public class View {
             }
 
             break;
+        }
+    }
+
+    private void generateEntities() {
+        while (true) {
+            System.out.println();
+            System.out.println("Press a - to generate authors");
+            System.out.println("Press b - to generate books");
+            System.out.println("Press r - to generate readers");
+            System.out.println("Press s - to generate subscriptions");
+            System.out.println("Press q - to quit the program");
+            System.out.println();
+
+            System.out.print("Choose an entity: ");
+
+            switch (SCANNER.next()) {
+                case "a":
+                    AUTHOR_DAO.generateEntities();
+                    System.out.println("Authors were successfully generated");
+
+                    break;
+                case "b":
+                    BOOK_DAO.generateEntities();
+                    System.out.println("Books were successfully generated");
+
+                    break;
+                case "r":
+                    READER_DAO.generateEntities();
+                    System.out.println("Readers were successfully generated");
+
+                    break;
+                case "s":
+                    SUBSCRIPTION_DAO.generateEntities();
+                    System.out.println("Subscriptions were successfully generated");
+
+                    break;
+                case "q":
+                    System.exit(0);
+                default:
+                    System.out.println("Incorrect entity type. Try again.");
+                    continue;
+            }
+
+            break;
+        }
+    }
+
+    private void searchWithReaderAndSubscriptionEntities() {
+        System.out.print("\nReader first name: ");
+        final String firstName = SCANNER.next();
+
+        System.out.print("Reader second name: ");
+        final String secondName = SCANNER.next();
+
+        System.out.print("Subscription registration date: ");
+        final Date registrationDate = Date.valueOf(SCANNER.next());
+
+        for (List<Map<String, Object>> recordList : Dao.searchWithReaderAndSubscriptionEntities(firstName, secondName, registrationDate)) {
+            System.out.println("Reader id: " + recordList.get(0).get("reader_id"));
+            System.out.println("Reader first name: " + recordList.get(1).get("first_name"));
+            System.out.println("Reader second name: " + recordList.get(2).get("second_name"));
+            System.out.println("Subscription id: " + recordList.get(3).get("id"));
+            System.out.println("Subscription registration date: " + recordList.get(4).get("registration_date"));
+            System.out.println("Subscription expiration date: " + recordList.get(5).get("expiration_date"));
+            System.out.println();
         }
     }
 

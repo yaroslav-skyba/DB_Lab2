@@ -2,12 +2,15 @@ package com.github.yaroslavskybadev.dao.impl;
 
 import com.github.yaroslavskybadev.dao.AbstractDao;
 import com.github.yaroslavskybadev.dto.Reader;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class ReaderDao extends AbstractDao<Reader> {
+    private long lastId = findAll().stream().mapToLong(Reader::getId).max().getAsLong();
+
     @Override
     protected Reader getEntity(ResultSet resultSet) throws SQLException {
         final Reader reader = new Reader();
@@ -73,6 +76,18 @@ public class ReaderDao extends AbstractDao<Reader> {
         } catch (SQLException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    @Override
+    protected Reader createRandomizedEntity() {
+        final Reader reader = new Reader();
+        reader.setId(++lastId);
+
+        final int stringLength = 50;
+        reader.setFirstName(RandomStringUtils.randomAlphanumeric(stringLength));
+        reader.setSecondName(RandomStringUtils.randomAlphanumeric(stringLength));
+
+        return reader;
     }
 
     private void setSpecificValuesForCreate(PreparedStatement preparedStatement, Reader e) throws SQLException {

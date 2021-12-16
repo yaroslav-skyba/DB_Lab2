@@ -3,14 +3,23 @@ package com.github.yaroslavskybadev.dao.impl;
 import com.github.yaroslavskybadev.ConnectionManager;
 import com.github.yaroslavskybadev.dao.AbstractDao;
 import com.github.yaroslavskybadev.dto.Book;
+import com.github.yaroslavskybadev.dto.Reader;
 import com.github.yaroslavskybadev.dto.Subscription;
+import org.apache.commons.math3.random.RandomDataGenerator;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SubscriptionDao extends AbstractDao<Subscription> {
+    private static final RandomDataGenerator RANDOM_DATA_GENERATOR = new RandomDataGenerator();
+    private static final long LAST_READER_ID = new ReaderDao().findAll().stream().mapToLong(Reader::getId).max().getAsLong();
+
+    private long lastId = findAll().stream().mapToLong(Subscription::getId).max().getAsLong();
+
     @Override
     protected Subscription getEntity(ResultSet resultSet) throws SQLException {
         final Subscription subscription = new Subscription();
@@ -77,6 +86,22 @@ public class SubscriptionDao extends AbstractDao<Subscription> {
         } catch (SQLException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    @Override
+    protected Subscription createRandomizedEntity() {
+        final Subscription subscription = new Subscription();
+        subscription.setId(++lastId);
+        subscription.setReaderId(RANDOM_DATA_GENERATOR.nextLong(1, LAST_READER_ID));
+
+        final ThreadLocalRandom current = ThreadLocalRandom.current();
+        final long dateMultiplier = 1000L;
+        final long registrationSeconds = current.nextInt() * dateMultiplier;
+
+        subscription.setRegistrationDate(new Date(registrationSeconds));
+        subscription.setExpirationDate(new Date(registrationSeconds + current.nextInt() * dateMultiplier));
+
+        return subscription;
     }
 
     public void addBooks(Subscription subscription) {

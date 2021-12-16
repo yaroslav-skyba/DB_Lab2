@@ -4,6 +4,7 @@ import com.github.yaroslavskybadev.ConnectionManager;
 import com.github.yaroslavskybadev.dao.AbstractDao;
 import com.github.yaroslavskybadev.dto.Author;
 import com.github.yaroslavskybadev.dto.Book;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +13,8 @@ import java.sql.SQLException;
 
 public class AuthorDao extends AbstractDao<Author> {
     private static final BookDao BOOK_DAO = new BookDao();
+
+    private long lastId = findAll().stream().mapToLong(Author::getId).max().getAsLong();
 
     @Override
     protected Author getEntity(ResultSet resultSet) throws SQLException {
@@ -89,6 +92,18 @@ public class AuthorDao extends AbstractDao<Author> {
         } catch (SQLException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    @Override
+    protected Author createRandomizedEntity() {
+        final Author author = new Author();
+        author.setId(++lastId);
+
+        final int stringLength = 50;
+        author.setFirstName(RandomStringUtils.randomAlphanumeric(stringLength));
+        author.setSecondName(RandomStringUtils.randomAlphanumeric(stringLength));
+
+        return author;
     }
 
     public void addBooks(Author author) {
