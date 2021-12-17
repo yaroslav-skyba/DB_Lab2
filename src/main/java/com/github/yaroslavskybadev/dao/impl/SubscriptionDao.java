@@ -12,6 +12,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class SubscriptionDao extends AbstractDao<Subscription> {
@@ -95,11 +96,10 @@ public class SubscriptionDao extends AbstractDao<Subscription> {
         subscription.setReaderId(RANDOM_DATA_GENERATOR.nextLong(1, LAST_READER_ID));
 
         final ThreadLocalRandom current = ThreadLocalRandom.current();
-        final long dateMultiplier = 1000L;
-        final long registrationSeconds = current.nextInt() * dateMultiplier;
+        final long registrationTime = current.nextLong(Date.valueOf("1500-1-1").getTime(), new java.util.Date().getTime());
 
-        subscription.setRegistrationDate(new Date(registrationSeconds));
-        subscription.setExpirationDate(new Date(registrationSeconds + current.nextInt() * dateMultiplier));
+        subscription.setRegistrationDate(new Date(registrationTime));
+        subscription.setExpirationDate(new Date(current.nextLong(registrationTime, Date.valueOf("3000-1-1").getTime())));
 
         return subscription;
     }

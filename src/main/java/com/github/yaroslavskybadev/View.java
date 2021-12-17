@@ -1,6 +1,6 @@
 package com.github.yaroslavskybadev;
 
-import com.github.yaroslavskybadev.dao.Dao;
+import com.github.yaroslavskybadev.dao.Searcher;
 import com.github.yaroslavskybadev.dao.impl.AuthorDao;
 import com.github.yaroslavskybadev.dao.impl.BookDao;
 import com.github.yaroslavskybadev.dao.impl.ReaderDao;
@@ -18,10 +18,12 @@ import java.util.Scanner;
 
 public class View {
     private static final Scanner SCANNER = new Scanner(System.in);
+
     private static final AuthorDao AUTHOR_DAO = new AuthorDao();
     private static final BookDao BOOK_DAO = new BookDao();
     private static final ReaderDao READER_DAO = new ReaderDao();
     private static final SubscriptionDao SUBSCRIPTION_DAO = new SubscriptionDao();
+    private static final Searcher SEARCHER = new Searcher();
 
     private static final String BOOK_NAMES_SEPARATOR = ";";
     private static final String KEY_TO_STOP_ADDING_ENTITIES = "s";
@@ -37,8 +39,9 @@ public class View {
             System.out.println("Press u - to update an entity");
             System.out.println("Press d - to delete an entity");
             System.out.println("Press g - to generate entities");
-            System.out.println("Press s2 - to search with 2 tables");
-            System.out.println("Press s3 - to search with 3 tables");
+            System.out.println("Press s1 - to search with the first set of attributes");
+            System.out.println("Press s2 - to search with the second set of attributes");
+            System.out.println("Press s3 - to search with the third set of attributes");
             System.out.println("Press q - to quit the program");
             System.out.println();
 
@@ -63,11 +66,14 @@ public class View {
                 case "g":
                     generateEntities();
                     break;
+                case "s1":
+                    printSearchResult1();
+                    break;
                 case "s2":
-                    searchWithReaderAndSubscriptionEntities();
+                    printSearchResult2();
                     break;
                 case "s3":
-                    searchWithBookAndReaderAndSubscriptionEntities();
+                    printSearchResult3();
                     break;
                 case "q":
                     System.exit(0);
@@ -487,48 +493,59 @@ public class View {
         }
     }
 
-    private void searchWithReaderAndSubscriptionEntities() {
-        System.out.print("\nReader first name: ");
-        final String firstName = SCANNER.next();
-
-        System.out.print("Reader second name: ");
-        final String secondName = SCANNER.next();
-
-        System.out.print("Subscription registration date: ");
-        final Date registrationDate = Date.valueOf(SCANNER.next());
-
-        for (List<Map<String, Object>> recordList : Dao.searchWithReaderAndSubscriptionEntities(firstName, secondName, registrationDate)) {
-            System.out.println("Reader id: " + recordList.get(0).get("reader_id"));
-            System.out.println("Reader first name: " + recordList.get(1).get("first_name"));
-            System.out.println("Reader second name: " + recordList.get(2).get("second_name"));
-            System.out.println("Subscription id: " + recordList.get(3).get("id"));
-            System.out.println("Subscription registration date: " + recordList.get(4).get("registration_date"));
-            System.out.println("Subscription expiration date: " + recordList.get(5).get("expiration_date"));
-            System.out.println();
-        }
+    private void printSearchResult1() {
+        System.out.println();
+        printSearchResult(SEARCHER.searchWithFirstNameAndSecondNameAndRegistrationDate(
+                getAttributeValue("Reader first name"),
+                getAttributeValue("Reader second name"),
+                Date.valueOf(getAttributeValue("Subscription registration date"))
+        ), System.nanoTime());
     }
 
-    private void searchWithBookAndReaderAndSubscriptionEntities() {
-        System.out.print("\nBook name: ");
-        final String bookName = SCANNER.next();
+    private void printSearchResult2() {
+        System.out.println();
+        printSearchResult(SEARCHER.searchWithFirstNameAndSecondNameAndExpirationDate(
+                getAttributeValue("Reader first name"),
+                getAttributeValue("Reader second name"),
+                Date.valueOf(getAttributeValue("Subscription expiration date"))
+        ), System.nanoTime());
+    }
 
-        System.out.print("Reader second name: ");
-        final String secondName = SCANNER.next();
+    private void printSearchResult3() {
+        System.out.println();
+        printSearchResult(SEARCHER.searchWithSecondNameAndRegistrationDateAndExpirationDate(
+                getAttributeValue("Reader second name"),
+                Date.valueOf(getAttributeValue("Subscription registration date")),
+                Date.valueOf(getAttributeValue("Subscription expiration date"))
+        ), System.nanoTime());
+    }
 
-        System.out.print("Subscription registration date: ");
-        final Date registrationDate = Date.valueOf(SCANNER.next());
+    private void printSearchResult(List<Map<String, Object>> resultList, long startTime) {
+        final long endTime = System.nanoTime();
 
-        for (List<Map<String, Object>> recordList : Dao.searchWithReaderAndSubscriptionEntities(bookName, secondName, registrationDate)) {
-            System.out.println("Book name: " + recordList.get(0).get("name"));
-            System.out.println("Page count: " + recordList.get(0).get("page_count"));
-            System.out.println("Reader id: " + recordList.get(0).get("reader_id"));
-            System.out.println("Reader first name: " + recordList.get(1).get("first_name"));
-            System.out.println("Reader second name: " + recordList.get(2).get("second_name"));
-            System.out.println("Subscription id: " + recordList.get(3).get("id"));
-            System.out.println("Subscription registration date: " + recordList.get(4).get("registration_date"));
-            System.out.println("Subscription expiration date: " + recordList.get(5).get("expiration_date"));
+        System.out.println();
+
+        if (resultList.isEmpty()) {
+            System.out.println("No records were found");
+            return;
+        }
+
+        for (Map<String, Object> attributeMap : resultList) {
+            System.out.println("Reader id: " + attributeMap.get("reader_id"));
+            System.out.println("Reader first name: " + attributeMap.get("first_name"));
+            System.out.println("Reader second name: " + attributeMap.get("second_name"));
+            System.out.println("Subscription id: " + attributeMap.get("id"));
+            System.out.println("Subscription registration date: " + attributeMap.get("registration_date"));
+            System.out.println("Subscription expiration date: " + attributeMap.get("expiration_date"));
             System.out.println();
         }
+
+        System.out.println("Execution time: " + ((endTime - startTime) * Math.pow(10, -6)) + " ms");
+    }
+
+    private String getAttributeValue(String message) {
+        System.out.print(message + ": ");
+        return SCANNER.next();
     }
 
     private void printAuthor(Author author) {

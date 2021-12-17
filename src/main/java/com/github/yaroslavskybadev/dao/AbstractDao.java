@@ -78,7 +78,7 @@ public abstract class AbstractDao<T> implements Dao<T> {
 
     @Override
     public void generateEntities() {
-       for (int i = 0; i < 10000; i++) {
+       for (int i = 0; i < 100000; i++) {
            create(createRandomizedEntity());
        }
     }
