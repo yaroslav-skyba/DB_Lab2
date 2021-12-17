@@ -27,6 +27,8 @@ public class View {
     private static final String KEY_TO_STOP_ADDING_ENTITIES = "s";
 
     public void runMenu() {
+        SCANNER.useDelimiter("\n");
+
         while (true) {
             System.out.println();
             System.out.println("Press c - to create an entity");
