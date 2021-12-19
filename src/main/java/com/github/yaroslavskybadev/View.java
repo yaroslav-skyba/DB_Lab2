@@ -527,7 +527,6 @@ public class View {
 
         if (resultList.isEmpty()) {
             System.out.println("No records were found");
-            return;
         }
 
         for (Map<String, Object> attributeMap : resultList) {

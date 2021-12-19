@@ -70,6 +70,8 @@ public class Searcher {
                 }
             }
 
+            System.out.println(preparedStatement);
+
             return resultList;
         } catch (SQLException e) {
             throw new IllegalArgumentException("Some errors occurred while connecting", e);
