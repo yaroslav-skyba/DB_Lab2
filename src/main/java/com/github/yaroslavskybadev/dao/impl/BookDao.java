@@ -91,7 +91,7 @@ public class BookDao extends AbstractDao<Book> {
         final Book book = new Book();
         book.setId(++lastId);
         book.setName(RandomStringUtils.randomAlphanumeric(50));
-        book.setPageCount(RANDOM.nextInt(2000));
+        book.setPageCount(RANDOM.nextInt(2000) + 1);
 
         return book;
     }
